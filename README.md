@@ -1,4 +1,8 @@
 # Git_Commit_AI
+Legegyszerűbb futtasd a run.bat fájlt
+
+A python kódok ide kerülnek:
+.git/script
 
 cmd:
 
