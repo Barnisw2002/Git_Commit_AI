@@ -1,0 +1,9 @@
+#!/bin/sh
+
+COMMIT_MESSAGE=$(cat "$1")
+
+export COMMIT_MESSAGE
+python3 .git/script/gitscript.py
+
+# Folytatjuk a commit folyamatot
+exit 0
