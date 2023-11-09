@@ -2,7 +2,7 @@ import os
 import shutil
 
 # A fájlok listája, amelyeket át szeretnénk helyezni
-files = ['script/gitscript.py', 'script/send_gpt1.py', 'script/GUI.py', 'script/send_gpt2.py', ]
+files = ['script/gitscript.py', 'script/send_gpt1.py', 'script/send_gpt2.py', 'script/config.ini']
 
 # Az új mappa neve
 new_folder = '.git/script'
