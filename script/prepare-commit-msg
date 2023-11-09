@@ -5,5 +5,7 @@ COMMIT_MESSAGE=$(cat "$1")
 export COMMIT_MESSAGE
 python3 .git/script/gitscript.py
 
-# Folytatjuk a commit folyamatot
-exit 0
+# commit folyamatot 0 folytatjuk 1 megállítjuk
+RETURN_VALUE=$?
+#echo "A Python kód visszatérési értéke: $RETURN_VALUE"
+exit $RETURN_VALUE

@@ -1,46 +1,82 @@
 #!/usr/bin/env python3
-# import sys
 import configparser
+import importlib.util
 import os
 import subprocess
-import sys
+from abc import ABC, abstractmethod
 import openai
-import send_gpt1
-import send_gpt2
 
+config_path = ".git/script/config.ini"
 
 def git_diff():
-    diffs = subprocess.check_output(['git', 'diff', '--cached']).decode('utf-8').split('\n')
-    diff = ""
-    for i in range(5, len(diffs)):
-        if diffs[i] and len(diffs[i]) > 0 and (diffs[i][0] == "-" or diffs[i][0] == "+"):
-            diff += diffs[i] + "\n"
-    return diff
+    try:
+        diffs = subprocess.check_output(['git', 'diff', '--cached']).decode('utf-8').split('\n')
+        diff = ""
+        for i in range(5, len(diffs)):
+            if diffs[i] and len(diffs[i]) > 0 and (diffs[i][0] == "-" or diffs[i][0] == "+"):
+                diff += diffs[i] + "\n"
+        return diff
 
+    except Exception as e:
+        print(f"Hiba történt a git_diff függvényben: {e}")
+        exit(1)
 
-class Git:
+class Git(ABC):
     def __init__(self):
+        self.tmt = None
+        self.GPT_version = None
+        self.my_commit = None
+        self.diff = None
+
+    @abstractmethod
+    def process(self):
+        pass
+
+    @staticmethod
+    def load_correct_version(path, class_name):
+        try:
+            spec = importlib.util.spec_from_file_location(class_name, path)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            return getattr(module, class_name)()
+
+        except Exception as e:
+            print(f"Hiba történt a load_correct_version függvényben: {e}")
+            files = os.listdir(path)
+            allfile = ""
+            for file in files:
+                allfile += file + "\n"
+            print(f"load_correct_version ezeket a fájlokat látja: {allfile}")
+            print(f"Config ini elérés út: {path}")
+            exit(1)
+
+    def load(self):
+        try:
+            config = configparser.ConfigParser()
+            config.read(config_path)
+            openai.api_key = config.get('API', 'key')
+            self.GPT_version = config.get('GPT', 'version')
+            self.tmt = int(config.get('TMT', 'temperature'))
+            self.my_commit = os.environ['COMMIT_MESSAGE']
+            self.diff = git_diff()
+
+        except Exception as e:
+            print(f"Hiba történt a load függvényben: {e}")
+            exit(1)
+
+def parse():
+    try:
         config = configparser.ConfigParser()
-        config.read('.git/script/config.ini')
-        openai.api_key = config.get('API', 'key')
-        self.GPT_version = config.get('GPT', 'version')
-        self.tmt = int(config.get('TMT', 'temperature'))
-        self.var = int(config.get('VAR', 'variant'))
-        self.my_commit = os.environ['COMMIT_MESSAGE']
-        self.diff = git_diff()
+        config.read(config_path)
+        return [config.get('VERSION', 'path'), config.get('VERSION', 'class_name')]
 
-    def send_gpt1(self):
-        return send_gpt1.send_gpt1(self)
-
-    def send_gpt2(self):
-        return send_gpt2.send_gpt2(self)
-
+    except Exception as e:
+        print(f"Hiba történt a parse függvényben: {e}")
+        exit(1)
 
 if __name__ == "__main__":
-    T1 = Git()
-    if T1.var == 0:
-        print(T1.send_gpt1())
-    elif T1.var == 1:
-        print(T1.send_gpt2())
-    else:
-        print(f"Rossz send verzió [{T1.var}]")
+    arguments = parse()
+    T1 = Git.load_correct_version(arguments[0], arguments[1])
+    T1.load()
+    T1.process()
+    exit(0)
