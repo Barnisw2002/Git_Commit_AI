@@ -1,0 +1,3 @@
+num1 = 24;
+num2 = 45;
+print(num1+num2);
